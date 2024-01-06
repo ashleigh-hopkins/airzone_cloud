@@ -1,7 +1,7 @@
 """Support for the Airzone Cloud climate."""
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import Any, Final, Dict
 
 from aioairzone_cloud.common import OperationAction, OperationMode, TemperatureUnit
 from aioairzone_cloud.const import (
@@ -28,7 +28,7 @@ from aioairzone_cloud.const import (
     AZD_TEMP_SET_MAX,
     AZD_TEMP_SET_MIN,
     AZD_TEMP_STEP,
-    AZD_ZONES,
+    AZD_ZONES, AZD_SPEEDS, AZD_SPEED, API_SPEED_CONF,
 )
 
 from homeassistant.components.climate import (
@@ -36,7 +36,7 @@ from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
-    HVACMode,
+    HVACMode, FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH, FAN_TOP, FAN_OFF,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
@@ -171,6 +171,10 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
         self._attr_min_temp = self.get_airzone_value(AZD_TEMP_SET_MIN)
         self._attr_target_temperature = self.get_airzone_value(AZD_TEMP_SET)
 
+        speed: int | None = self.get_airzone_value(AZD_SPEED)
+        if speed is not None:
+            self._attr_fan_mode = "auto" if speed == 0 else str(speed)
+
 
 class AirzoneDeviceClimate(AirzoneClimate):
     """Define an Airzone Cloud Device base class."""
@@ -207,6 +211,15 @@ class AirzoneDeviceClimate(AirzoneClimate):
 
         if ATTR_HVAC_MODE in kwargs:
             await self.async_set_hvac_mode(kwargs[ATTR_HVAC_MODE])
+
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set new target fan mode."""
+        params = {
+            API_SPEED_CONF: {
+                API_VALUE: int(fan_mode),
+            },
+        }
+        await self._async_update_params(params)
 
 
 class AirzoneDeviceGroupClimate(AirzoneClimate):
@@ -258,6 +271,14 @@ class AirzoneDeviceGroupClimate(AirzoneClimate):
             params[API_PARAMS][API_POWER] = True
         await self._async_update_params(params)
 
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set new target fan mode."""
+        params = {
+            API_SPEED_CONF: {
+                API_VALUE: int(fan_mode),
+            },
+        }
+        await self._async_update_params(params)
 
 class AirzoneAidooClimate(AirzoneAidooEntity, AirzoneDeviceClimate):
     """Define an Airzone Cloud Aidoo climate."""
@@ -279,6 +300,13 @@ class AirzoneAidooClimate(AirzoneAidooEntity, AirzoneDeviceClimate):
         if HVACMode.OFF not in self._attr_hvac_modes:
             self._attr_hvac_modes += [HVACMode.OFF]
 
+        speeds: Dict[int, int] | None = self.get_airzone_value(AZD_SPEEDS)
+        if speeds is not None and len(speeds) > 0:
+            self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
+            self._attr_fan_modes = [
+                "auto" if mode == 0 else str(mode) for mode in speeds.values()
+            ]
+
         self._async_update_attrs()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -296,6 +324,15 @@ class AirzoneAidooClimate(AirzoneAidooEntity, AirzoneDeviceClimate):
             params[API_POWER] = {
                 API_VALUE: True,
             }
+        await self._async_update_params(params)
+
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set new target fan mode."""
+        params = {
+            API_SPEED_CONF: {
+                API_VALUE: int(fan_mode),
+            },
+        }
         await self._async_update_params(params)
 
 
@@ -318,6 +355,13 @@ class AirzoneGroupClimate(AirzoneGroupEntity, AirzoneDeviceGroupClimate):
         ]
         if HVACMode.OFF not in self._attr_hvac_modes:
             self._attr_hvac_modes += [HVACMode.OFF]
+
+        speeds: Dict[int, int] | None = self.get_airzone_value(AZD_SPEEDS)
+        if speeds is not None and len(speeds) > 0:
+            self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
+            self._attr_fan_modes = [
+                "auto" if mode == 0 else str(mode) for mode in speeds.values()
+            ]
 
         self._async_update_attrs()
 
@@ -342,6 +386,13 @@ class AirzoneInstallationClimate(AirzoneInstallationEntity, AirzoneDeviceGroupCl
         if HVACMode.OFF not in self._attr_hvac_modes:
             self._attr_hvac_modes += [HVACMode.OFF]
 
+        speeds: Dict[int, int] | None = self.get_airzone_value(AZD_SPEEDS)
+        if speeds is not None and len(speeds) > 0:
+            self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
+            self._attr_fan_modes = [
+                "auto" if mode == 0 else str(mode) for mode in speeds.values()
+            ]
+
         self._async_update_attrs()
 
 
@@ -364,6 +415,13 @@ class AirzoneZoneClimate(AirzoneZoneEntity, AirzoneDeviceClimate):
         ]
         if HVACMode.OFF not in self._attr_hvac_modes:
             self._attr_hvac_modes += [HVACMode.OFF]
+
+        speeds: Dict[int, int] | None = self.get_airzone_value(AZD_SPEEDS)
+        if speeds is not None and len(speeds) > 0:
+            self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
+            self._attr_fan_modes = [
+                "auto" if mode == 0 else str(mode) for mode in speeds.values()
+            ]
 
         self._async_update_attrs()
 
@@ -396,3 +454,12 @@ class AirzoneZoneClimate(AirzoneZoneEntity, AirzoneDeviceClimate):
             raise HomeAssistantError(
                 f"Mode can't be changed on slave zone {self.entity_id}"
             )
+
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set new target fan mode."""
+        params = {
+            API_SPEED_CONF: {
+                API_VALUE: 0 if fan_mode == "auto" else int(fan_mode),
+            },
+        }
+        await self._async_update_params(params)
