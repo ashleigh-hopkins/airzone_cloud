@@ -11,6 +11,7 @@ SENSOR_EXTERNAL_TEMPERATURE: Final[str] = "External Temperature"
 SENSOR_INDOOR_UNIT_HEAT_EXCHANGER_TEMPERATURE: Final[str] = "Indoor Unit Heat Exchanger Temperature"
 SENSOR_OUTDOOR_UNIT_HEAT_EXCHANGER_TEMPERATURE: Final[str] = "Outdoor Unit Heat Exchanger Temperature"
 SENSOR_POWER_CONSUMPTION: Final[str] = "Power Consumption"
+SENSOR_RETURN_TEMPERATURE: Final[str] = "Return Temperature"
 SENSOR_WORK_TEMPERATURE: Final[str] = "Work Temperature"
 
 AIOAIRZONE_CLOUD_TIMEOUT_SEC: Final[int] = 30

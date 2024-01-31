@@ -12,6 +12,7 @@ from aioairzone_cloud.const import (
     AZD_EXTERNAL_TEMP,
     AZD_HUMIDITY,
     AZD_PE_UE,
+    AZD_RETURN_TEMP,
     AZD_TEMP,
     AZD_WEBSERVERS,
     AZD_WORK_TEMP,
@@ -26,6 +27,7 @@ from .const import (
     SENSOR_INDOOR_UNIT_HEAT_EXCHANGER_TEMPERATURE,
     SENSOR_OUTDOOR_UNIT_HEAT_EXCHANGER_TEMPERATURE,
     SENSOR_POWER_CONSUMPTION,
+    SENSOR_RETURN_TEMPERATURE,
     SENSOR_WORK_TEMPERATURE,
 )
 
@@ -87,6 +89,13 @@ AIDOO_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         key=AZD_EXTERNAL_TEMP,
         name=SENSOR_EXTERNAL_TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        device_class=SensorDeviceClass.TEMPERATURE,
+        key=AZD_RETURN_TEMP,
+        name=SENSOR_RETURN_TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
